@@ -70,7 +70,7 @@ function send(res, status, file) {
   createReadStream(file).pipe(res)
 }
 
-createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
   const { pathname } = new URL(req.url, `http://localhost:${port}`)
 
   if (BASE_PATH && !pathname.startsWith(BASE_PATH)) {
@@ -93,6 +93,30 @@ createServer(async (req, res) => {
 
   res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' })
   res.end('Not found\n')
-}).listen(port, () => {
+})
+
+// A stale instance from an earlier session holding the port is the common
+// case, and the default behaviour — an unhandled 'error' event printing a
+// twelve-line stack trace — buries that. Worse, the obvious workaround of
+// picking another port silently leaves the old server running, still serving
+// whatever dist/ looked like when it started. Say what happened and how to
+// clear it.
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(
+      `Port ${port} is already in use — most likely a preview server left ` +
+        `running from an earlier session.\n\n` +
+        `  Find it:  ss -lptn 'sport = :${port}'\n` +
+        `  Stop it:  kill <pid>\n\n` +
+        `Or serve on a different port:  PORT=4174 npm run preview:pages\n\n` +
+        `Prefer stopping the old one. It is serving the dist/ that existed ` +
+        `when it started, so anything you check against it may be stale.`
+    )
+    process.exit(1)
+  }
+  throw err
+})
+
+server.listen(port, () => {
   console.log(`Serving dist/ as GitHub Pages would: http://localhost:${port}${BASE_PATH}/`)
 })
