@@ -1,0 +1,63 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Lets you re-run a deploy from the Actions tab without pushing an empty
+  # commit — useful when only a Pages setting changed.
+  workflow_dispatch:
+
+# The built-in GITHUB_TOKEN is read-only by default. Pages deployment needs to
+# write the artifact and mint an OIDC token to prove the deployment came from
+# this workflow.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two deploys at once. cancel-in-progress is false on purpose: a
+# half-finished Pages deployment that gets cancelled can leave the site serving
+# a partial upload, so an in-flight one is allowed to finish and the newer
+# commit simply queues behind it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # npm ci, not npm install: it installs exactly what package-lock.json
+      # pins and fails if the two have drifted, so a deploy cannot silently
+      # pick up a different dependency tree than the one tested locally.
+      - run: npm ci
+
+      # Lint is part of the deploy gate rather than a separate optional job.
+      # --max-warnings 0 means a warning fails the build; warnings that nobody
+      # is forced to look at accumulate until the output is worthless.
+      - run: npm run lint:ci
+
+      - run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

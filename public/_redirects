@@ -1,0 +1,9 @@
+# NOT ACTIVE ON THE CURRENT DEPLOYMENT. GitHub Pages ignores this file; it has
+# no rewrite support at all, which is why the build prerenders a real HTML file
+# per route and emits a 404.html fallback instead. Kept for Netlify.
+#
+# Note that on Netlify this rule is now a backstop rather than the mechanism:
+# the prerendered files are matched first, so this only catches genuinely
+# unknown paths. Left at status 200 deliberately — Netlify would otherwise need
+# a separate 404 rule, and the app's own NotFound page sets noindex either way.
+/*  /index.html  200

@@ -1,0 +1,23 @@
+node_modules
+dist
+.vite
+*.local
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Secrets. Nothing in this project reads env vars today, but an ignored file
+# costs nothing and an accidentally committed one is permanent.
+.env
+.env.*
+
+.claude
+.claude.*

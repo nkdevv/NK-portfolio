@@ -1,0 +1,52 @@
+# ── NOT ACTIVE ON THE CURRENT DEPLOYMENT ─────────────────────────────────────
+# The site is hosted on GitHub Pages, which serves no custom response headers
+# and ignores this file entirely. It is kept because it is the complete, correct
+# policy for a host that *can* serve headers, and moving to Netlify (or Vercel,
+# via vercel.json) should not mean reconstructing it from memory.
+#
+# What is actually enforced today is the subset expressible in markup: the
+# Content-Security-Policy and referrer meta tags in index.html. The gaps that
+# leaves — frame-ancestors, Permissions-Policy, Cache-Control — are documented
+# there.
+#
+# Netlify equivalent of the headers in vercel.json. Kept in sync by hand —
+# vercel.json is JSON and cannot carry comments, so the reasoning lives here.
+
+/*
+  # script-src and style-src allow 'unsafe-inline' deliberately. index.html
+  # carries an inline pre-paint theme script and a build-generated JSON-LD
+  # block, and Framer Motion animates through inline style attributes, which
+  # style-src governs. The alternative is a hash allowlist that fails silently
+  # and visibly — a theme flash on load, or every animation dead — the next
+  # time either inline block is edited.
+  #
+  # The tradeoff is acceptable here specifically because this site renders no
+  # untrusted input: no dangerouslySetInnerHTML, no user-generated content, no
+  # query parameters reaching the DOM, no authenticated state worth stealing.
+  # Revisit the moment any of that stops being true.
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  # frame-ancestors above covers modern browsers; this is for the ones that ignore it.
+  X-Frame-Options: DENY
+  # Stops the browser second-guessing a declared Content-Type.
+  X-Content-Type-Options: nosniff
+  # Full URL within the site, origin-only when leaving, nothing on downgrade.
+  Referrer-Policy: strict-origin-when-cross-origin
+  # The site asks for none of these, so deny them rather than leave the prompts
+  # reachable by injected code.
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), interest-cohort=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Cross-Origin-Opener-Policy: same-origin
+
+# Hashed filenames are immutable by definition: a content change produces a new
+# name, so the old one can be cached forever.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The HTML shell is the opposite — it is the manifest pointing at those hashed
+# chunks. Cache it and a returning visitor requests chunk filenames that no
+# longer exist after a deploy.
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
