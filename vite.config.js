@@ -16,6 +16,7 @@ import {
   SITE_URL,
   absoluteUrl,
   basePath,
+  canonicalUrl,
 } from './src/data/site.js'
 
 const src = fileURLToPath(new URL('./src', import.meta.url))
@@ -38,7 +39,7 @@ function structuredData() {
         '@id': `${SITE_URL}/#person`,
         name: profile.name,
         jobTitle: profile.title,
-        url: SITE_URL,
+        url: canonicalUrl('/'),
         // Deliberately no telephone. Including it would publish the number in
         // machine-readable form on every page; the contact page is the only
         // place it belongs.
@@ -74,7 +75,7 @@ function structuredData() {
         '@id': `${SITE_URL}/#service`,
         name: `${profile.name} — ${SITE_TITLE}`,
         description: SITE_DESCRIPTION,
-        url: SITE_URL,
+        url: canonicalUrl('/'),
         image: absoluteUrl('/og.png'),
         founder: { '@id': `${SITE_URL}/#person` },
         provider: { '@id': `${SITE_URL}/#person` },
@@ -92,7 +93,7 @@ function structuredData() {
           name: 'Freelance services',
           itemListElement: services.map((service) => ({
             '@type': 'Offer',
-            url: absoluteUrl(`/services/${service.slug}`),
+            url: canonicalUrl(`/services/${service.slug}`),
             itemOffered: {
               '@type': 'Service',
               name: service.name,
@@ -106,7 +107,7 @@ function structuredData() {
       {
         '@type': 'WebSite',
         '@id': `${SITE_URL}/#website`,
-        url: SITE_URL,
+        url: canonicalUrl('/'),
         name: SITE_NAME,
         description: SITE_DESCRIPTION,
         publisher: { '@id': `${SITE_URL}/#person` },
@@ -124,8 +125,9 @@ function structuredData() {
       // testing — the runtime SEO hook corrects it for browsers, so only the
       // social scrapers, which do not run JavaScript, would ever see it wrong.
       let rebased = withHead(html, {
-        canonical: absoluteUrl('/'),
-        og: { 'og:url': absoluteUrl('/'), 'og:image': absoluteUrl(OG_IMAGE) },
+        // canonical also sets og:url, so it is not repeated below.
+        canonical: canonicalUrl('/'),
+        og: { 'og:image': absoluteUrl(OG_IMAGE) },
         name: { 'twitter:image': absoluteUrl(OG_IMAGE) },
       })
 
@@ -263,7 +265,7 @@ function prerenderRoutes() {
         const html = withHead(template, {
           title: `${route.title} | ${SITE_NAME}`,
           description: route.description,
-          canonical: absoluteUrl(route.path),
+          canonical: canonicalUrl(route.path),
           robots: route.noindex ? 'noindex, follow' : undefined,
         })
 
@@ -319,7 +321,7 @@ function seoFiles() {
         .map((route) =>
           [
             '  <url>',
-            `    <loc>${absoluteUrl(route.path)}</loc>`,
+            `    <loc>${canonicalUrl(route.path)}</loc>`,
             `    <lastmod>${lastmod}</lastmod>`,
             route.changefreq ? `    <changefreq>${route.changefreq}</changefreq>` : null,
             route.priority ? `    <priority>${route.priority}</priority>` : null,

@@ -29,9 +29,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # This is the Node that runs the build, and is separate from the Node the
+      # runner uses to execute the actions themselves — the "Node 20 is being
+      # deprecated" notice in the log refers to the latter and is not affected
+      # by this. 22 is the current LTS; Vite 7 requires 20.19+ or 22.12+.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       # npm ci, not npm install: it installs exactly what package-lock.json
@@ -46,7 +50,19 @@ jobs:
 
       - run: npm run build
 
+      # enablement: true makes this action turn Pages on via the API instead of
+      # failing when it is off. Without it the first run of a fresh repo dies
+      # with "Get Pages site failed ... Not Found", because Settings → Pages
+      # defaults to "Deploy from a branch" and the Pages site does not exist
+      # until the source is switched to GitHub Actions.
+      #
+      # It is a no-op once Pages is configured, so it costs nothing on later
+      # runs. It can still fail on repos where org policy forbids enabling
+      # Pages from a workflow — in that case set the source by hand under
+      # Settings → Pages.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

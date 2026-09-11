@@ -67,3 +67,28 @@ export const OG_IMAGE_ALT =
 export function absoluteUrl(path = "/") {
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
+
+/**
+ * Absolute URL for a *page*, with a trailing slash.
+ *
+ * Separate from absoluteUrl because the trailing slash is only correct for
+ * pages. Applying it to /og.png or /sitemap.xml would break them.
+ *
+ * The slash is not cosmetic. Each route is served as a directory containing
+ * index.html, and GitHub Pages answers a directory URL without a trailing
+ * slash with a 301 to the version that has one. So "/services/seo" is a
+ * redirect and "/services/seo/" is the real page. A canonical tag naming the
+ * redirecting form is a canonical pointing at a URL that is not the page —
+ * Google asks for the final URL, and the sitemap should list what a crawler
+ * will actually be served without a hop.
+ *
+ * Confirmed against the live deployment, which returned 301 for the
+ * slash-less form.
+ *
+ * Internal <Link> hrefs stay slash-less on purpose: those navigate client-side
+ * and never reach the server, so no redirect is involved.
+ */
+export function canonicalUrl(path = "/") {
+  const url = absoluteUrl(path);
+  return url.endsWith("/") ? url : `${url}/`;
+}

@@ -1,5 +1,12 @@
 import { useEffect } from 'react'
-import { OG_IMAGE, OG_IMAGE_ALT, SITE_NAME, SITE_TITLE, absoluteUrl } from '@/data/site'
+import {
+  OG_IMAGE,
+  OG_IMAGE_ALT,
+  SITE_NAME,
+  SITE_TITLE,
+  absoluteUrl,
+  canonicalUrl,
+} from '@/data/site'
 
 function upsertMeta(selector, attr, value) {
   let el = document.head.querySelector(selector)
@@ -59,7 +66,7 @@ export function useSeo({ title, description, path, noindex = false }) {
       // Preview and staging deployments serve the same bundle on a different
       // host; deriving the canonical from the runtime host makes every preview
       // self-canonicalise and compete with production in the index.
-      const url = absoluteUrl(path)
+      const url = canonicalUrl(path)
       upsertMeta('meta[property="og:url"]', 'content', url)
       upsertLink('canonical', url)
     } else {
